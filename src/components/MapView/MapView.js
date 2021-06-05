@@ -52,6 +52,7 @@ export default props => {
                     scrollWheelZoom={false}
                     className="map"
                     animate={true}
+                    tap={false}
                 >
                     <TileLayer
                     attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'

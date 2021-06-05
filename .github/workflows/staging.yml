@@ -1,0 +1,48 @@
+name: Build and Deploy
+on:
+  push:
+    branches:
+      - staging
+env:
+  CI: false
+  PROJECT_ID: "${{ secrets.STAGING_PROJECT_ID }}"
+  GCP_SA_KEY: "${{ secrets.GCP_SA_STAGING_KEY }}"
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      - name: Set NodeJS version
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.17.0'
+      - name: Install Dependencies and Build
+        run: |
+          npm install
+          echo "REACT_APP_BASE_URL=${{ secrets.REACT_STAGING_APP_BASE_URL }}" >> .env
+          echo "REACT_APP_API_URL=${{ secrets.REACT_STAGING_APP_API_URL }}" >> .env
+          npm run build
+      - name: Archive Production Artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: build
+          path: build
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      - name: Download Artifact
+        uses: actions/download-artifact@master
+        with:
+          name: build
+          path: build
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only hosting
